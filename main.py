@@ -280,7 +280,6 @@ class DataController:
         self.file_handler = FileHandler()
         self.data = None
         self.reporter = ReportGenerator(self.analyzer) 
-        self.add_data_filter = None
         self.current_filters = []
         self.data_filter = DataFilter(pd.DataFrame())
         self.current_plot = None
@@ -322,28 +321,12 @@ class DataController:
         try:
             path = self.file_handler.export_html(self.analyzer.data)
             self.view.show_info(f"Data exported to {path}")
-        except Exception as e:
-            self.view.show_error(str(e))
-    
-        try:
             path = self.file_handler.export_html(self.reporter.report_data)
             self.view.show_info(f"Report exported to {path}")
-        except Exception as e:
-            self.view.show_error(str(e))
-            
-        try:
             path = self.file_handler.export_html(self.reporter.correlation_data)
             self.view.show_info(f"Correlations exported to {path}")
-        except Exception as e:
-            self.view.show_error(str(e))
-            
-        try:
             path = self.file_handler.export_html(self.reporter.profile_data)
             self.view.show_info(f"Profile exported to {path}")
-        except Exception as e:
-            self.view.show_error(str(e))
-            
-        try:
             path = self.file_handler.export_html(self.reporter.distribution_data)
             self.view.show_info(f"Distributions exported to {path}")
         except Exception as e:
@@ -396,10 +379,10 @@ class DataController:
     #         self.view.show_error(str(e))
     
     def process_file(self, file_path):
+        if not file_path:
+            return
+        
         try:
-            if not file_path:
-                return
-                
             self.view.update_status(f"Loading {os.path.basename(file_path)}...")
             
             # Explicit CSV check
@@ -421,44 +404,15 @@ class DataController:
         except Exception as e:
             error_msg = f"Failed to load file: {str(e)}"
             self.view.show_error(error_msg)
-
-    # def update_preview(self, data):
-    #     # Clear existing preview
-    #     for i in self.view.preview_table.get_children():
-    #         self.view.preview_table.delete(i)
             
-    #     # Set columns
-    #     self.view.preview_table["columns"] = list(data.columns)
-    #     for col in data.columns:
-    #         self.view.preview_table.heading(col, text=col)
-            
-    #     # Add sample rows
-    #     for _, row in data.head(10).iterrows():
-    #         self.view.preview_table.insert("", tk.END, values=list(row))
-    
-    # def update_preview(self, data):
-    #     try:
-    #         # Clear existing preview
-    #         self.view.preview_table.delete(*self.view.preview_table.get_children())
-            
-    #         # Set columns
-    #         self.view.preview_table["columns"] = list(data.columns)
-    #         for col in data.columns:
-    #             self.view.preview_table.heading(col, text=col)
-                
-    #         # Add sample rows
-    #         for _, row in data.head(10).iterrows():
-    #             self.view.preview_table.insert("", tk.END, values=list(row.astype(str)))
-                
-    #     except Exception as e:
-    #         self.view.show_error(f"Preview update failed: {str(e)}")
+        finally:
+            self.view.update_status("")
     
     def update_preview(self, data):
         try:
             # Clear existing preview
-            for item in self.view.preview_table.get_children():
-                self.view.preview_table.delete(item)
-                
+            self.view.preview_table.delete(*self.view.preview_table.get_children())
+            
             # Set columns
             self.view.preview_table["columns"] = list(data.columns)
             for col in data.columns:
