@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from ydata_profiling import ProfileReport
 from .preprocessor import DataPreprocessor
+import matplotlib
+import threading
 
 class DataAnalyzer:
     def __init__(self):
@@ -12,17 +14,29 @@ class DataAnalyzer:
         self.data = self.preprocessor.clean_column_names(data)
         
     def generate_profile(self):
-        return ProfileReport(
-            self.data,
-            title="Dataset Report",
-            explorative=True,
-            correlations={
-                "auto": {"calculate": True},
-                "pearson": {"calculate": True},
-                "spearman": {"calculate": True},
-                "kendall": {"calculate": True}
-            }
-        )
+        # Check if we're in a background thread and switch matplotlib backend if needed
+        if threading.current_thread() != threading.main_thread():
+            # Save original backend
+            original_backend = matplotlib.get_backend()
+            # Switch to non-interactive backend for background thread
+            matplotlib.use('Agg')
+            
+        try:
+            return ProfileReport(
+                self.data,
+                title="Dataset Report",
+                explorative=True,
+                correlations={
+                    "auto": {"calculate": True},
+                    "pearson": {"calculate": True},
+                    "spearman": {"calculate": True},
+                    "kendall": {"calculate": True}
+                }
+            )
+        finally:
+            # Restore original backend if we changed it
+            if threading.current_thread() != threading.main_thread():
+                matplotlib.use(original_backend)
     
     def calculate_correlations(self, method='pearson'):
         """Enhanced correlation analysis"""

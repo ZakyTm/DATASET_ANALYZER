@@ -101,7 +101,7 @@ class DataModel:
         if self.df is not None and self.stat_analyzer is not None:
             return self.stat_analyzer.get_summary_statistics()
         return pd.DataFrame()
-    
+
     def apply_filter(self, column, operator, value):
         """Apply data filter"""
         if self.df is not None:
@@ -509,7 +509,7 @@ class DataVisualizerApp:
         menu_bar.add_cascade(label="Help", menu=help_menu)
         
         self.root.config(menu=menu_bar)
-    
+        
     def update_file_path_display(self):
         """Update the file path display with the current file path"""
         if self.file_path:
@@ -957,6 +957,40 @@ class DataVisualizerApp:
         """
         
         messagebox.showinfo("About", about_text)
+
+    def show_data_info(self):
+        """Display data information"""
+        if self.model.df is not None:
+            info = self.model.get_data_info()
+            if info:
+                self.data_info_text.delete(1.0, tk.END)
+                self.data_info_text.insert(tk.END, f"Dataset Shape: {info['shape']}\n\n")
+                self.data_info_text.insert(tk.END, f"Columns: {', '.join(info['columns'])}\n\n")
+                
+                self.data_info_text.insert(tk.END, "Data Types:\n")
+                for col, dtype in info['dtypes'].items():
+                    self.data_info_text.insert(tk.END, f"{col}: {dtype}\n")
+                
+                self.data_info_text.insert(tk.END, "\nMissing Values:\n")
+                for col, count in info['missing_values'].items():
+                    self.data_info_text.insert(tk.END, f"{col}: {count}\n")
+                
+                if 'memory_usage' in info:
+                    self.data_info_text.insert(tk.END, f"\nMemory Usage: {info['memory_usage']:.2f} MB\n")
+        else:
+            self.data_info_text.delete(1.0, tk.END)
+            self.data_info_text.insert(tk.END, "No data loaded.")
+    
+    def show_data_preview(self):
+        """Display data preview"""
+        if self.model.df is not None:
+            preview = self.model.get_data_preview()
+            if preview is not None:
+                self.data_preview_text.delete(1.0, tk.END)
+                self.data_preview_text.insert(tk.END, preview.to_string())
+        else:
+            self.data_preview_text.delete(1.0, tk.END)
+            self.data_preview_text.insert(tk.END, "No data loaded.")
 
 class DataController:
     def __init__(self, view, model):

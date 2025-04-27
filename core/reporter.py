@@ -3,6 +3,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 from pathlib import Path
+import matplotlib
+import threading
 
 class ReportGenerator:
     def __init__(self, data_analyzer):
@@ -13,15 +15,27 @@ class ReportGenerator:
 
     def generate_interactive_plots(self):
         """Generate interactive Plotly visualizations"""
-        figs = []
-        for col in self.data.columns:
-            if pd.api.types.is_numeric_dtype(self.data[col]):
-                fig = self._create_numeric_plot(col)
-            else:
-                fig = self._create_categorical_plot(col)
-            figs.append((col, fig))
-        self._save_plots(figs)
-        return figs
+        # Check if we're in a background thread and switch matplotlib backend if needed
+        if threading.current_thread() != threading.main_thread():
+            # Save original backend
+            original_backend = matplotlib.get_backend()
+            # Switch to non-interactive backend for background thread
+            matplotlib.use('Agg')
+            
+        try:
+            figs = []
+            for col in self.data.columns:
+                if pd.api.types.is_numeric_dtype(self.data[col]):
+                    fig = self._create_numeric_plot(col)
+                else:
+                    fig = self._create_categorical_plot(col)
+                figs.append((col, fig))
+            self._save_plots(figs)
+            return figs
+        finally:
+            # Restore original backend if we changed it
+            if threading.current_thread() != threading.main_thread():
+                matplotlib.use(original_backend)
 
     def _create_numeric_plot(self, column):
         fig = make_subplots(rows=1, cols=2, subplot_titles=(
@@ -71,19 +85,31 @@ class ReportGenerator:
 
     def generate_correlation_matrix(self):
         """Create advanced correlation visualization"""
-        corr = self.analyzer.calculate_correlations()
-        fig = go.Figure(data=go.Heatmap(
-            z=corr.values,
-            x=corr.columns,
-            y=corr.index,
-            colorscale='RdBu',
-            zmid=0
-        ))
-        fig.update_layout(
-            title="Feature Correlation Matrix",
-            height=600,
-            xaxis_showgrid=False,
-            yaxis_showgrid=False
-        )
-        fig.write_html(self.report_dir / "correlation_matrix.html")
-        return fig
+        # Check if we're in a background thread and switch matplotlib backend if needed
+        if threading.current_thread() != threading.main_thread():
+            # Save original backend
+            original_backend = matplotlib.get_backend()
+            # Switch to non-interactive backend for background thread
+            matplotlib.use('Agg')
+            
+        try:
+            corr = self.analyzer.calculate_correlations()
+            fig = go.Figure(data=go.Heatmap(
+                z=corr.values,
+                x=corr.columns,
+                y=corr.index,
+                colorscale='RdBu',
+                zmid=0
+            ))
+            fig.update_layout(
+                title="Feature Correlation Matrix",
+                height=600,
+                xaxis_showgrid=False,
+                yaxis_showgrid=False
+            )
+            fig.write_html(self.report_dir / "correlation_matrix.html")
+            return fig
+        finally:
+            # Restore original backend if we changed it
+            if threading.current_thread() != threading.main_thread():
+                matplotlib.use(original_backend)

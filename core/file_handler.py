@@ -521,7 +521,14 @@ class FileHandler:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             report_path = self.report_dir / f"data_profile_{timestamp}.html"
             
-            report.to_file(report_path)
+            # Extract HTML content first in the current thread
+            # This avoids tkinter issues in background threads
+            html_content = report.to_html()
+            
+            # Write the HTML content to file directly
+            with open(report_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+                
             logger.info(f"Data profile report saved: {report_path}")
             return report_path
         except Exception as e:

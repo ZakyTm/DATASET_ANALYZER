@@ -1,0 +1,173 @@
+2025-04-28 00:04:14,029 - dataset_analyzer - INFO - Created default HTML template at utils\templates\report_template.html
+2025-04-28 00:08:12,478 - dataset_analyzer - INFO - DataFilter initialized
+2025-04-28 00:08:44,425 - dataset_analyzer - INFO - Loading data from C:/Users/Zack/Desktop/PFE TESTING ON DATA/Processed CSV In Chunks/enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:08:44,425 - dataset_analyzer - INFO - Loading data from C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv with extension .csv
+2025-04-28 00:08:44,426 - dataset_analyzer - INFO - Attempting to load CSV with UTF-8 encoding: C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:08:46,923 - dataset_analyzer - INFO - DataFilter initialized
+2025-04-28 00:08:46,923 - dataset_analyzer - INFO - Successfully loaded data with shape (733863, 30)
+2025-04-28 00:09:17,744 - dataset_analyzer - INFO - Loading data from C:/Users/Zack/Desktop/PFE TESTING ON DATA/Processed CSV In Chunks/enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:09:17,744 - dataset_analyzer - INFO - Loading data from C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv with extension .csv
+2025-04-28 00:09:17,744 - dataset_analyzer - INFO - Attempting to load CSV with UTF-8 encoding: C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:09:22,966 - dataset_analyzer - INFO - DataFilter initialized
+2025-04-28 00:09:22,966 - dataset_analyzer - INFO - Successfully loaded data with shape (733863, 30)
+2025-04-28 00:11:23,691 - dataset_analyzer - INFO - DataFilter initialized
+2025-04-28 00:11:46,621 - dataset_analyzer - INFO - Loading data from C:/Users/Zack/Desktop/PFE TESTING ON DATA/Processed CSV In Chunks/enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:11:46,621 - dataset_analyzer - INFO - Loading data from C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv with extension .csv
+2025-04-28 00:11:46,621 - dataset_analyzer - INFO - Attempting to load CSV with UTF-8 encoding: C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:11:48,683 - dataset_analyzer - INFO - DataFilter initialized
+2025-04-28 00:11:48,683 - dataset_analyzer - INFO - Successfully loaded data with shape (733863, 30)
+2025-04-28 00:12:07,171 - dataset_analyzer - INFO - Analyzing data
+2025-04-28 00:12:09,491 - dataset_analyzer - INFO - Data analysis completed
+2025-04-28 00:12:30,065 - dataset_analyzer - INFO - Preparing data for modeling with target: subscriber_wilaya
+2025-04-28 00:12:30,204 - dataset_analyzer - INFO - Target 'subscriber_wilaya' has 108 unique values, treating as classification task
+2025-04-28 00:12:30,538 - dataset_analyzer - INFO - Training model of type: auto
+2025-04-28 00:12:30,652 - dataset_analyzer - INFO - Training random_forest model
+2025-04-28 00:20:05,129 - dataset_analyzer - INFO - Loading data from C:/Users/Zack/Desktop/PFE TESTING ON DATA/Processed CSV In Chunks/enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:20:05,129 - dataset_analyzer - INFO - Loading data from C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv with extension .csv
+2025-04-28 00:20:05,129 - dataset_analyzer - INFO - Attempting to load CSV with UTF-8 encoding: C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:20:07,052 - dataset_analyzer - INFO - Successfully loaded data with shape (733863, 30)
+2025-04-28 00:20:28,060 - dataset_analyzer - INFO - Generating comprehensive report
+2025-04-28 00:21:38,603 - dataset_analyzer - ERROR - Report save failed: main thread is not in main loop
+2025-04-28 00:21:38,603 - dataset_analyzer - ERROR - Error generating report: Report save failed: main thread is not in main loop
+2025-04-28 00:21:38,711 - dataset_analyzer - ERROR - Traceback (most recent call last):
+  File "C:\Users\Zack\Desktop\DataSet_analyzer\core\file_handler.py", line 524, in save_report
+    report.to_file(report_path)
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 381, in to_file
+    data = self.to_html()
+           ^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 498, in to_html
+    return self.html
+           ^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 294, in html
+    self._html = self._render_html()
+                 ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 411, in _render_html
+    report = self.report
+             ^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 288, in report
+    self._report = get_report_structure(self.config, self.description_set)
+                                                     ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 270, in description_set
+    self._description_set = describe_df(
+                            ^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\model\describe.py", line 145, in describe
+    scatter_matrix[x][y] = progress(
+                           ^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\utils\progress_bar.py", line 11, in inner
+    ret = fn(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\model\pairwise.py", line 31, in get_scatter_plot
+    return scatter_pairwise(config, df_temp[x], df_temp[y], x, y)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\visualisation\plot.py", line 374, in scatter_pairwise
+    return plot_360_n0sc0pe(config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\visualisation\utils.py", line 73, in plot_360_n0sc0pe
+    plt.savefig(
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\matplotlib\pyplot.py", line 1244, in savefig
+    fig.canvas.draw_idle()  # Need this if 'transparent=True', to reset colors.
+    ^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\matplotlib\backends\_backend_tk.py", line 278, in draw_idle
+    self._idle_draw_id = self._tkcanvas.after_idle(idle_draw)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\tkinter\__init__.py", line 882, in after_idle
+    return self.after('idle', func, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\tkinter\__init__.py", line 873, in after
+    name = self._register(callit)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\tkinter\__init__.py", line 1604, in _register
+    self.tk.createcommand(name, f)
+RuntimeError: main thread is not in main loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Zack\Desktop\DataSet_analyzer\main.py", line 233, in generate_report
+    report_path = self.file_handler.save_report(report)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Zack\Desktop\DataSet_analyzer\core\file_handler.py", line 529, in save_report
+    raise RuntimeError(f"Report save failed: {str(e)}")
+RuntimeError: Report save failed: main thread is not in main loop
+
+2025-04-28 00:21:56,580 - dataset_analyzer - INFO - Exporting data to pdf format
+2025-04-28 00:22:25,993 - dataset_analyzer - INFO - PDF report generated: reports\data_analysis_report_20250428_002225.pdf
+2025-04-28 00:23:18,161 - dataset_analyzer - INFO - Exporting data to html format
+2025-04-28 00:23:19,354 - dataset_analyzer - INFO - HTML report generated: reports\interactive_report_20250428_002319.html
+2025-04-28 00:23:24,197 - dataset_analyzer - ERROR - Report save failed: main thread is not in main loop
+2025-04-28 00:24:15,730 - dataset_analyzer - INFO - Exporting data to html format
+2025-04-28 00:24:16,814 - dataset_analyzer - INFO - HTML report generated: reports\interactive_report_20250428_002416.html
+2025-04-28 00:34:34,738 - dataset_analyzer - INFO - Loading data from C:/Users/Zack/Desktop/PFE TESTING ON DATA/Processed CSV In Chunks/enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:34:34,739 - dataset_analyzer - INFO - Loading data from C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv with extension .csv
+2025-04-28 00:34:34,739 - dataset_analyzer - INFO - Attempting to load CSV with UTF-8 encoding: C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:34:36,662 - dataset_analyzer - INFO - Successfully loaded data with shape (733863, 30)
+2025-04-28 00:36:11,904 - dataset_analyzer - INFO - Generating comprehensive report
+2025-04-28 00:38:05,996 - dataset_analyzer - ERROR - Report save failed: main thread is not in main loop
+2025-04-28 00:38:05,997 - dataset_analyzer - ERROR - Error generating report: Report save failed: main thread is not in main loop
+2025-04-28 00:38:06,003 - dataset_analyzer - ERROR - Traceback (most recent call last):
+  File "C:\Users\Zack\Desktop\DataSet_analyzer\core\file_handler.py", line 524, in save_report
+    report.to_file(report_path)
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 381, in to_file
+    data = self.to_html()
+           ^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 498, in to_html
+    return self.html
+           ^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 294, in html
+    self._html = self._render_html()
+                 ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 411, in _render_html
+    report = self.report
+             ^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 288, in report
+    self._report = get_report_structure(self.config, self.description_set)
+                                                     ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 270, in description_set
+    self._description_set = describe_df(
+                            ^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\model\describe.py", line 145, in describe
+    scatter_matrix[x][y] = progress(
+                           ^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\utils\progress_bar.py", line 11, in inner
+    ret = fn(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\model\pairwise.py", line 31, in get_scatter_plot
+    return scatter_pairwise(config, df_temp[x], df_temp[y], x, y)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\visualisation\plot.py", line 374, in scatter_pairwise
+    return plot_360_n0sc0pe(config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\visualisation\utils.py", line 73, in plot_360_n0sc0pe
+    plt.savefig(
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\matplotlib\pyplot.py", line 1244, in savefig
+    fig.canvas.draw_idle()  # Need this if 'transparent=True', to reset colors.
+    ^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\matplotlib\backends\_backend_tk.py", line 278, in draw_idle
+    self._idle_draw_id = self._tkcanvas.after_idle(idle_draw)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\tkinter\__init__.py", line 882, in after_idle
+    return self.after('idle', func, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\tkinter\__init__.py", line 873, in after
+    name = self._register(callit)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\tkinter\__init__.py", line 1604, in _register
+    self.tk.createcommand(name, f)
+RuntimeError: main thread is not in main loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Zack\Desktop\DataSet_analyzer\main.py", line 233, in generate_report
+    report_path = self.file_handler.save_report(report)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Zack\Desktop\DataSet_analyzer\core\file_handler.py", line 529, in save_report
+    raise RuntimeError(f"Report save failed: {str(e)}")
+RuntimeError: Report save failed: main thread is not in main loop
+
