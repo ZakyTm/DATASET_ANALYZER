@@ -1,19 +1,42 @@
 # to Run pip install -r requirements.txt
-# Core
+# Core dependencies
 pandas==2.0.3
+numpy==1.24.3
+matplotlib==3.7.2
+seaborn==0.12.2
+scikit-learn==1.3.0
 plotly==5.15.0
+ydata-profiling==4.5.1
+
+# Data handling
+openpyxl==3.1.2
+pyarrow==13.0.0
+fastparquet==2023.7.0
+SQLAlchemy==2.0.19
+h5py==3.9.0
+
+# Visualization
+matplotlib==3.7.2
+seaborn==0.12.2
+plotly==5.15.0
+kaleido==0.2.1
+
+# Machine Learning
+scikit-learn==1.3.0
+joblib==1.3.1
+scipy==1.11.1
+
+# Reporting
 jinja2==3.1.2
 reportlab==4.0.4
-tkinter
-matplotlib
-ydata-profiling==4.5.1
-scikit-learn==1.3.0
-kaleido==0.2.1
-jinja2==3.1.2
+weasyprint==59.0
 
-# GUI
+# UI
 tkinterdnd2==0.3.0
-openpyxl==3.1.2
+
+# Logging and utilities
+tqdm==4.65.0
+colorama==0.4.6
 
 # Testing
 pytest==7.4.0

@@ -1,135 +1,559 @@
 import pandas as pd
 import os
+import json
+import re
+import zipfile
+import shutil
 from pathlib import Path
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from io import BytesIO
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.lib import colors
+from io import BytesIO, StringIO
 import plotly.io as pio
 import mimetypes
+from datetime import datetime
+from utils.helpers import get_logger
+from utils.constants import SUPPORTED_EXTENSIONS, DEFAULT_EXPORT_PATH
+
+logger = get_logger()
+
 class FileHandler:
     def __init__(self):
-        self.report_dir = Path("reports")
+        self.report_dir = Path(DEFAULT_EXPORT_PATH)
         self.report_dir.mkdir(exist_ok=True)
-        self.env = Environment(loader=FileSystemLoader('utils/templates'))
+        self.template_dir = Path("utils/templates")
+        
+        # Create template directory if it doesn't exist
+        if not self.template_dir.exists():
+            self.template_dir.mkdir(parents=True, exist_ok=True)
+            # Create a basic template if none exists
+            self._create_default_template()
+            
+        self.env = Environment(
+            loader=FileSystemLoader(self.template_dir),
+            autoescape=select_autoescape(['html', 'xml'])
+        )
+        
+        # File type handlers
         self.loaders = {
-            'text/csv': self.load_csv_file,
-            'text/plain': self.load_text_file,
-            'application/json': self.load_json_file,
-            'application/vnd.ms-excel': self.load_csv_file,  # Handle legacy Excel MI types
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': self.load_xlsx_file,
-            'application/vnd.ms-excel': self.load_xls_file,
-            # ... add more file types to the dictionary ...
+            '.csv': self.load_csv_file,
+            '.txt': self.load_text_file,
+            '.json': self.load_json_file,
+            '.xlsx': self.load_xlsx_file,
+            '.xls': self.load_xls_file,
+            '.parquet': self.load_parquet_file,
+            '.feather': self.load_feather_file,
+            '.pickle': self.load_pickle_file,
+            '.pkl': self.load_pickle_file,
+            '.hdf': self.load_hdf_file,
+            '.h5': self.load_hdf_file,
+            '.sql': self.load_sql_file,
+            '.db': self.load_sqlite_file,
+            '.zip': self.load_zip_file,
         }
+        
+        # Register MIME types
         mimetypes.add_type('text/csv', '.csv')
         mimetypes.add_type('application/vnd.ms-excel', '.xls')
+        mimetypes.add_type('application/x-parquet', '.parquet')
+        mimetypes.add_type('application/x-feather', '.feather')
     
+    def _create_default_template(self):
+        """Create a default HTML template if none exists"""
+        default_template = """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .plot-container {
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ title }}</h1>
+        <div class="summary">
+            <h2>Dataset Summary</h2>
+            <p>Rows: {{ rows }}, Columns: {{ columns }}</p>
+            <p>Generated: {{ generation_time }}</p>
+            {% if description %}
+            <p>{{ description }}</p>
+            {% endif %}
+        </div>
+        
+        {% if stats is defined %}
+        <h2>Statistics</h2>
+        <table>
+            <tr>
+                {% for col in stats.columns %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in stats.itertuples() %}
+            <tr>
+                {% for i in range(1, stats.shape[1] + 1) %}
+                <td>{{ row[i] }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+        
+        {% if plots %}
+        <h2>Visualizations</h2>
+        {% for plot in plots %}
+        <div class="plot-container">
+            {{ plot|safe }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        <div class="footer">
+            <p>Generated by Dataset Analyzer Pro</p>
+        </div>
+    </div>
+</body>
+</html>"""
+        
+        template_path = self.template_dir / "report_template.html"
+        with open(template_path, "w") as f:
+            f.write(default_template)
+        logger.info(f"Created default HTML template at {template_path}")
     
     def load_data(self, file_path):
-        # First check file extension directly
-        if file_path.lower().endswith('.csv'):
-            return self.load_csv_file(file_path)
+        """Load data from various file formats"""
+        try:
+            file_path = Path(file_path)
+            if not file_path.exists():
+                logger.error(f"File not found: {file_path}")
+                raise FileNotFoundError(f"File not found: {file_path}")
             
-        # Fallback to MIME detection
-        file_type, _ = mimetypes.guess_type(file_path)
-        if file_type in self.loaders:
-            return self.loaders[file_type](file_path)
-        else:
-            raise ValueError(f"Unsupported file type: {file_type or 'unknown'}")
+            ext = file_path.suffix.lower()
+            
+            if ext in self.loaders:
+                logger.info(f"Loading data from {file_path} with extension {ext}")
+                return self.loaders[ext](file_path)
+            else:
+                logger.error(f"Unsupported file extension: {ext}")
+                raise ValueError(f"Unsupported file extension: {ext}")
+                
+        except Exception as e:
+            logger.error(f"Error loading data: {str(e)}")
+            raise
     
     def load_csv_file(self, file_path):
-        # Add error handling for encoding issues
+        """Load data from CSV file with encoding detection"""
         try:
+            # First try UTF-8
+            logger.info(f"Attempting to load CSV with UTF-8 encoding: {file_path}")
             return pd.read_csv(file_path, encoding='utf-8')
         except UnicodeDecodeError:
+            # Fall back to latin-1
+            logger.info(f"Falling back to latin-1 encoding for: {file_path}")
             return pd.read_csv(file_path, encoding='latin-1')
+        except Exception as e:
+            # Try with additional options
+            logger.warning(f"Error loading CSV, trying with additional options: {str(e)}")
+            try:
+                return pd.read_csv(file_path, encoding='latin-1', sep=None, engine='python')
+            except Exception as e2:
+                logger.error(f"Failed to load CSV file: {str(e2)}")
+                raise
     
     def load_text_file(self, file_path):
-        # implementation to load text file
-        with open(file_path, 'r') as f:
-            return f.read()
-
-
+        """Load raw text file"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except UnicodeDecodeError:
+            with open(file_path, 'r', encoding='latin-1') as f:
+                return f.read()
+    
     def load_json_file(self, file_path):
-        # implementation to load json file
-        import json
-        with open(file_path, 'r') as f:
-            return json.load(f)
+        """Load JSON file to pandas DataFrame"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            # If it's a list of records, convert to DataFrame
+            if isinstance(data, list) and all(isinstance(item, dict) for item in data):
+                return pd.DataFrame(data)
+            # If it's a dict of records
+            elif isinstance(data, dict):
+                if all(isinstance(data[k], dict) for k in data):
+                    # Dict of dicts
+                    return pd.DataFrame.from_dict(data, orient='index')
+                else:
+                    # Simple dict
+                    return pd.DataFrame(data, index=[0])
+            else:
+                # Return raw data if we can't convert to DataFrame
+                logger.warning(f"JSON structure not suitable for DataFrame conversion")
+                return data
+        except Exception as e:
+            logger.error(f"Error loading JSON file: {str(e)}")
+            raise
     
     def load_xlsx_file(self, file_path):
-        import pandas as pd
-        return pd.read_excel(file_path)
+        """Load Excel XLSX file"""
+        try:
+            logger.info(f"Loading Excel XLSX file: {file_path}")
+            # Check for sheets
+            xl = pd.ExcelFile(file_path)
+            if len(xl.sheet_names) > 1:
+                logger.info(f"Multiple sheets found: {xl.sheet_names}")
+                # Return first sheet by default, could be extended to handle multiple sheets
+                return pd.read_excel(file_path, sheet_name=0)
+            return pd.read_excel(file_path)
+        except Exception as e:
+            logger.error(f"Error loading Excel file: {str(e)}")
+            raise
     
     def load_xls_file(self, file_path):
-        import pandas as pd
-        return pd.read_excel(file_path, engine='xlrd')
+        """Load legacy Excel XLS file"""
+        try:
+            logger.info(f"Loading Excel XLS file with xlrd engine: {file_path}")
+            return pd.read_excel(file_path, engine='xlrd')
+        except Exception as e:
+            logger.error(f"Error loading XLS file: {str(e)}")
+            raise
+    
+    def load_parquet_file(self, file_path):
+        """Load Parquet file"""
+        try:
+            logger.info(f"Loading Parquet file: {file_path}")
+            return pd.read_parquet(file_path)
+        except Exception as e:
+            logger.error(f"Error loading Parquet file: {str(e)}")
+            raise
+    
+    def load_feather_file(self, file_path):
+        """Load Feather file"""
+        try:
+            logger.info(f"Loading Feather file: {file_path}")
+            return pd.read_feather(file_path)
+        except Exception as e:
+            logger.error(f"Error loading Feather file: {str(e)}")
+            raise
+    
+    def load_pickle_file(self, file_path):
+        """Load pickle file"""
+        try:
+            logger.info(f"Loading pickle file: {file_path}")
+            return pd.read_pickle(file_path)
+        except Exception as e:
+            logger.error(f"Error loading pickle file: {str(e)}")
+            raise
+    
+    def load_hdf_file(self, file_path):
+        """Load HDF5 file"""
+        try:
+            logger.info(f"Loading HDF5 file: {file_path}")
+            return pd.read_hdf(file_path)
+        except Exception as e:
+            logger.error(f"Error loading HDF file: {str(e)}")
+            raise
+    
+    def load_sql_file(self, file_path):
+        """Load SQL query file and execute it"""
+        try:
+            logger.info(f"Loading SQL file: {file_path}")
+            with open(file_path, 'r') as f:
+                query = f.read()
+            
+            # This requires database connection details
+            # For now, just return the query
+            logger.warning("SQL file loaded but no database connection provided")
+            return query
+        except Exception as e:
+            logger.error(f"Error loading SQL file: {str(e)}")
+            raise
+    
+    def load_sqlite_file(self, file_path):
+        """Load SQLite database file"""
+        try:
+            logger.info(f"Loading SQLite database: {file_path}")
+            import sqlite3
+            conn = sqlite3.connect(file_path)
+            
+            # Get list of tables
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            
+            if not tables:
+                logger.warning(f"No tables found in SQLite database: {file_path}")
+                return None
+            
+            # Return first table by default
+            table_name = tables[0][0]
+            logger.info(f"Loading table: {table_name}")
+            return pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+        except Exception as e:
+            logger.error(f"Error loading SQLite database: {str(e)}")
+            raise
+    
+    def load_zip_file(self, file_path):
+        """Extract and load first suitable file from zip archive"""
+        try:
+            logger.info(f"Extracting zip file: {file_path}")
+            temp_dir = Path("temp_extract")
+            temp_dir.mkdir(exist_ok=True)
+            
+            with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                zip_ref.extractall(temp_dir)
+            
+            # Look for suitable files
+            for ext in SUPPORTED_EXTENSIONS:
+                for file in temp_dir.glob(f"*{ext}"):
+                    logger.info(f"Found suitable file in archive: {file}")
+                    result = self.load_data(file)
+                    # Clean up
+                    shutil.rmtree(temp_dir)
+                    return result
+            
+            # If no suitable file found
+            shutil.rmtree(temp_dir)
+            logger.error(f"No supported file found in zip archive: {file_path}")
+            raise ValueError(f"No supported file found in zip archive: {file_path}")
+        except Exception as e:
+            # Clean up in case of error
+            if temp_dir.exists():
+                shutil.rmtree(temp_dir)
+            logger.error(f"Error processing zip file: {str(e)}")
+            raise
     
     def export_pdf(self, report_data):
+        """Generate a professional PDF report with styling"""
         try:
-            pdf_path = self.report_dir / "full_report.pdf"
-            c = canvas.Canvas(str(pdf_path), pagesize=letter)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            pdf_path = self.report_dir / f"data_analysis_report_{timestamp}.pdf"
             
-            # Add text content
-            c.drawString(100, 750, "Data Analysis Report")
-            c.drawString(100, 730, f"Generated at: {pd.Timestamp.now()}")
+            doc = SimpleDocTemplate(
+                str(pdf_path),
+                pagesize=A4,
+                rightMargin=72,
+                leftMargin=72,
+                topMargin=72,
+                bottomMargin=72
+            )
+            
+            styles = getSampleStyleSheet()
+            elements = []
+            
+            # Title
+            title_style = styles['Heading1']
+            elements.append(Paragraph("Data Analysis Report", title_style))
+            elements.append(Spacer(1, 12))
+            
+            # Timestamp
+            date_style = styles['Normal']
+            elements.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", date_style))
+            elements.append(Spacer(1, 24))
+            
+            # Dataset info
+            if 'info' in report_data:
+                info_style = styles['Heading2']
+                elements.append(Paragraph("Dataset Information", info_style))
+                elements.append(Spacer(1, 12))
+                
+                for key, value in report_data['info'].items():
+                    elements.append(Paragraph(f"<b>{key}:</b> {value}", styles['Normal']))
+                
+                elements.append(Spacer(1, 24))
+            
+            # Statistics table
+            if 'statistics' in report_data and isinstance(report_data['statistics'], pd.DataFrame):
+                stats = report_data['statistics']
+                stats_style = styles['Heading2']
+                elements.append(Paragraph("Statistical Summary", stats_style))
+                elements.append(Spacer(1, 12))
+                
+                # Convert DataFrame to list of lists for Table
+                data = [['Metric'] + list(stats.columns)]
+                for idx, row in stats.iterrows():
+                    data.append([idx] + [f"{x:.4f}" if isinstance(x, float) else str(x) for x in row])
+                
+                # Create table
+                table = Table(data)
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ]))
+                elements.append(table)
+                elements.append(Spacer(1, 24))
             
             # Add plots
-            y_position = 700
-            for plot in report_data.get('plots', []):
-                img_path = self.report_dir / plot
-                if img_path.exists():
-                    c.drawImage(str(img_path), 100, y_position-200, width=400, height=200)
-                    y_position -= 220
-                    if y_position < 100:
-                        c.showPage()
-                        y_position = 750
+            if 'plots' in report_data:
+                plot_style = styles['Heading2']
+                elements.append(Paragraph("Visualizations", plot_style))
+                elements.append(Spacer(1, 12))
+                
+                for plot_path in report_data.get('plots', []):
+                    if isinstance(plot_path, str) and Path(plot_path).exists():
+                        img = Image(plot_path, width=400, height=300)
+                        elements.append(img)
+                        elements.append(Spacer(1, 12))
             
-            c.save()
+            # Build PDF
+            doc.build(elements)
+            logger.info(f"PDF report generated: {pdf_path}")
             return pdf_path
         except Exception as e:
+            logger.error(f"PDF export failed: {str(e)}")
             raise RuntimeError(f"PDF export failed: {str(e)}")
 
     def export_html(self, report_data):
+        """Generate interactive HTML report"""
         try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            html_path = self.report_dir / f"interactive_report_{timestamp}.html"
+            
             template = self.env.get_template('report_template.html')
+            
+            # Add timestamp to report data
+            report_data['generation_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
             html_content = template.render(report_data)
-            html_path = self.report_dir / "interactive_report.html"
-            with open(html_path, 'w') as f:
+            with open(html_path, 'w', encoding='utf-8') as f:
                 f.write(html_content)
+                
+            logger.info(f"HTML report generated: {html_path}")
             return html_path
         except Exception as e:
+            logger.error(f"HTML export failed: {str(e)}")
             raise RuntimeError(f"HTML export failed: {str(e)}")
 
-    def export_csv(self, data):
+    def export_csv(self, data, include_index=False):
+        """Export DataFrame to CSV"""
         try:
-            csv_path = self.report_dir / "processed_data.csv"
-            data.to_csv(csv_path, index=False)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            csv_path = self.report_dir / f"processed_data_{timestamp}.csv"
+            
+            data.to_csv(csv_path, index=include_index)
+            logger.info(f"CSV export completed: {csv_path}")
             return csv_path
         except Exception as e:
+            logger.error(f"CSV export failed: {str(e)}")
             raise RuntimeError(f"CSV export failed: {str(e)}")
-        
+    
+    def export_excel(self, data, include_index=False):
+        """Export DataFrame to Excel"""
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            excel_path = self.report_dir / f"processed_data_{timestamp}.xlsx"
+            
+            data.to_excel(excel_path, index=include_index)
+            logger.info(f"Excel export completed: {excel_path}")
+            return excel_path
+        except Exception as e:
+            logger.error(f"Excel export failed: {str(e)}")
+            raise RuntimeError(f"Excel export failed: {str(e)}")
+    
+    def export_json(self, data, orient='records'):
+        """Export DataFrame to JSON"""
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            json_path = self.report_dir / f"processed_data_{timestamp}.json"
+            
+            data.to_json(json_path, orient=orient)
+            logger.info(f"JSON export completed: {json_path}")
+            return json_path
+        except Exception as e:
+            logger.error(f"JSON export failed: {str(e)}")
+            raise RuntimeError(f"JSON export failed: {str(e)}")
     
     def save_report(self, report):
+        """Save YData Profiling report"""
         try:
-            report_path = self.report_dir / "data_profile.html"
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            report_path = self.report_dir / f"data_profile_{timestamp}.html"
+            
             report.to_file(report_path)
+            logger.info(f"Data profile report saved: {report_path}")
             return report_path
         except Exception as e:
+            logger.error(f"Report save failed: {str(e)}")
             raise RuntimeError(f"Report save failed: {str(e)}")
     
     def save_plot(self, fig, name):
+        """Save plot in multiple formats"""
         try:
-            safe_name = self.get_safe_filename(name)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            safe_name = self.get_safe_filename(f"{name}_{timestamp}")
+            
             html_path = self.report_dir / f"{safe_name}.html"
             png_path = self.report_dir / f"{safe_name}.png"
             
+            # Save interactive HTML version
             fig.write_html(html_path)
+            
+            # Save static PNG version
             fig.write_image(png_path)
             
+            logger.info(f"Plot saved as HTML and PNG: {safe_name}")
             return str(png_path)
         except Exception as e:
+            logger.error(f"Plot save failed: {str(e)}")
             raise RuntimeError(f"Plot save failed: {str(e)}")
 
     @staticmethod
     def get_safe_filename(filename):
-        return "".join(c if c.isalnum() else "_" for c in filename)
+        """Convert string to a safe filename"""
+        # Replace spaces and special characters
+        safe_name = re.sub(r'[^\w\s-]', '', filename)
+        # Replace spaces with underscores
+        safe_name = re.sub(r'[\s]+', '_', safe_name)
+        return safe_name
