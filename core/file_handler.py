@@ -17,6 +17,7 @@ import mimetypes
 from datetime import datetime
 from utils.helpers import get_logger
 from utils.constants import SUPPORTED_EXTENSIONS, DEFAULT_EXPORT_PATH
+import threading
 
 logger = get_logger()
 
@@ -521,13 +522,40 @@ class FileHandler:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             report_path = self.report_dir / f"data_profile_{timestamp}.html"
             
-            # Extract HTML content first in the current thread
-            # This avoids tkinter issues in background threads
-            html_content = report.to_html()
-            
-            # Write the HTML content to file directly
-            with open(report_path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
+            # Generate HTML content directly to avoid GUI issues in background threads
+            if hasattr(report, "to_file"):
+                if threading.current_thread() == threading.main_thread():
+                    # If in main thread, use the standard method
+                    report.to_file(report_path)
+                else:
+                    # In background thread, write HTML directly
+                    try:
+                        # Attempt to get the HTML content
+                        html_content = report.to_html()
+                        
+                        # Write it directly to file
+                        with open(report_path, 'w', encoding='utf-8') as f:
+                            f.write(html_content)
+                    except Exception as html_error:
+                        logger.error(f"Error generating HTML content: {str(html_error)}")
+                        # Fallback to minimal report
+                        minimal_html = f"""
+                        <html>
+                        <head><title>Data Profile Report</title></head>
+                        <body>
+                            <h1>Data Profile Report</h1>
+                            <p>Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                            <p>Dataset shape: {report.df_pre.shape[0]} rows × {report.df_pre.shape[1]} columns</p>
+                            <p>Note: Interactive report could not be generated. Please run the report in the main thread.</p>
+                        </body>
+                        </html>
+                        """
+                        with open(report_path, 'w', encoding='utf-8') as f:
+                            f.write(minimal_html)
+            else:
+                # If it's not a ProfileReport object, just save whatever it is
+                with open(report_path, 'w', encoding='utf-8') as f:
+                    f.write(str(report))
                 
             logger.info(f"Data profile report saved: {report_path}")
             return report_path

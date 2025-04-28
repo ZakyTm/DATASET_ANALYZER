@@ -4,6 +4,7 @@ from ydata_profiling import ProfileReport
 from .preprocessor import DataPreprocessor
 import matplotlib
 import threading
+import os
 
 class DataAnalyzer:
     def __init__(self):
@@ -14,29 +15,53 @@ class DataAnalyzer:
         self.data = self.preprocessor.clean_column_names(data)
         
     def generate_profile(self):
-        # Check if we're in a background thread and switch matplotlib backend if needed
-        if threading.current_thread() != threading.main_thread():
+        # Force non-interactive mode more aggressively when in a background thread
+        is_background_thread = threading.current_thread() != threading.main_thread()
+        
+        if is_background_thread:
             # Save original backend
             original_backend = matplotlib.get_backend()
-            # Switch to non-interactive backend for background thread
-            matplotlib.use('Agg')
+            # Force Agg backend for non-interactive plots
+            matplotlib.use('Agg', force=True)
+            # Set environment variable to ensure no GUI is used
+            os.environ['DISPLAY'] = ''
             
         try:
+            # Create the report with minimal correlations to avoid plotting issues
             return ProfileReport(
                 self.data,
                 title="Dataset Report",
                 explorative=True,
+                minimal=is_background_thread,  # Use minimal mode in background threads
                 correlations={
-                    "auto": {"calculate": True},
-                    "pearson": {"calculate": True},
-                    "spearman": {"calculate": True},
-                    "kendall": {"calculate": True}
-                }
+                    "auto": {"calculate": not is_background_thread},
+                    "pearson": {"calculate": not is_background_thread},
+                    "spearman": {"calculate": not is_background_thread},
+                    "kendall": {"calculate": not is_background_thread},
+                    "phi_k": {"calculate": False},
+                    "cramers": {"calculate": False}
+                },
+                plot={
+                    "correlation": {
+                        "cmap": "RdBu",
+                        "bad": "#000000"
+                    },
+                    "missing": {
+                        "cmap": "RdBu"
+                    }
+                },
+                interactions={
+                    "continuous": False,
+                },
+                samples={"head": 5, "tail": 5}
             )
         finally:
             # Restore original backend if we changed it
-            if threading.current_thread() != threading.main_thread():
+            if is_background_thread:
                 matplotlib.use(original_backend)
+                # Remove environment variable
+                if 'DISPLAY' in os.environ:
+                    del os.environ['DISPLAY']
     
     def calculate_correlations(self, method='pearson'):
         """Enhanced correlation analysis"""

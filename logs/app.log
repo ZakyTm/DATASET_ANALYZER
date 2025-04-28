@@ -171,3 +171,83 @@ Traceback (most recent call last):
     raise RuntimeError(f"Report save failed: {str(e)}")
 RuntimeError: Report save failed: main thread is not in main loop
 
+2025-04-28 00:55:08,175 - dataset_analyzer - INFO - Loading data from C:/Users/Zack/Desktop/PFE TESTING ON DATA/Processed CSV In Chunks/enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:55:08,175 - dataset_analyzer - INFO - Loading data from C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv with extension .csv
+2025-04-28 00:55:08,175 - dataset_analyzer - INFO - Attempting to load CSV with UTF-8 encoding: C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv
+2025-04-28 00:55:10,321 - dataset_analyzer - INFO - Successfully loaded data with shape (733863, 30)
+2025-04-28 00:56:43,789 - dataset_analyzer - INFO - Generating comprehensive report
+2025-04-28 00:58:45,782 - dataset_analyzer - ERROR - Report save failed: main thread is not in main loop
+2025-04-28 00:58:45,785 - dataset_analyzer - ERROR - Error generating report: Report save failed: main thread is not in main loop
+2025-04-28 00:58:45,808 - dataset_analyzer - ERROR - Traceback (most recent call last):
+  File "C:\Users\Zack\Desktop\DataSet_analyzer\core\file_handler.py", line 526, in save_report
+    html_content = report.to_html()
+                   ^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 498, in to_html
+    return self.html
+           ^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 294, in html
+    self._html = self._render_html()
+                 ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 411, in _render_html
+    report = self.report
+             ^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 288, in report
+    self._report = get_report_structure(self.config, self.description_set)
+                                                     ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\profile_report.py", line 270, in description_set
+    self._description_set = describe_df(
+                            ^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\model\describe.py", line 145, in describe
+    scatter_matrix[x][y] = progress(
+                           ^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\utils\progress_bar.py", line 11, in inner
+    ret = fn(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\model\pairwise.py", line 31, in get_scatter_plot
+    return scatter_pairwise(config, df_temp[x], df_temp[y], x, y)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\visualisation\plot.py", line 374, in scatter_pairwise
+    return plot_360_n0sc0pe(config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\ydata_profiling\visualisation\utils.py", line 73, in plot_360_n0sc0pe
+    plt.savefig(
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\matplotlib\pyplot.py", line 1244, in savefig
+    fig.canvas.draw_idle()  # Need this if 'transparent=True', to reset colors.
+    ^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Zack\Desktop\DataSet_analyzer\.venv\Lib\site-packages\matplotlib\backends\_backend_tk.py", line 278, in draw_idle
+    self._idle_draw_id = self._tkcanvas.after_idle(idle_draw)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\tkinter\__init__.py", line 882, in after_idle
+    return self.after('idle', func, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\tkinter\__init__.py", line 873, in after
+    name = self._register(callit)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\tkinter\__init__.py", line 1604, in _register
+    self.tk.createcommand(name, f)
+RuntimeError: main thread is not in main loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Zack\Desktop\DataSet_analyzer\main.py", line 233, in generate_report
+    report_path = self.file_handler.save_report(report)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Zack\Desktop\DataSet_analyzer\core\file_handler.py", line 536, in save_report
+    raise RuntimeError(f"Report save failed: {str(e)}")
+RuntimeError: Report save failed: main thread is not in main loop
+
+2025-04-28 01:03:45,292 - dataset_analyzer - INFO - Loading data from C:/Users/Zack/Desktop/PFE TESTING ON DATA/Processed CSV In Chunks/enhanced_data_with_anomalies_part1.csv
+2025-04-28 01:03:45,292 - dataset_analyzer - INFO - Loading data from C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv with extension .csv
+2025-04-28 01:03:45,292 - dataset_analyzer - INFO - Attempting to load CSV with UTF-8 encoding: C:\Users\Zack\Desktop\PFE TESTING ON DATA\Processed CSV In Chunks\enhanced_data_with_anomalies_part1.csv
+2025-04-28 01:03:47,135 - dataset_analyzer - INFO - Successfully loaded data with shape (733863, 30)
+2025-04-28 01:04:10,318 - dataset_analyzer - INFO - Generating comprehensive report
+2025-04-28 01:04:42,467 - dataset_analyzer - INFO - Data profile report saved: reports\data_profile_20250428_010410.html
+2025-04-28 01:04:51,230 - dataset_analyzer - ERROR - Error generating plots: 
+Image export using the "kaleido" engine requires the kaleido package,
+which can be installed using pip:
+    $ pip install -U kaleido
+

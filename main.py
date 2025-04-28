@@ -309,6 +309,9 @@ class DataVisualizerApp:
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
+        # Set up custom styles for treeview
+        self._setup_treeview_styles()
+        
         # File selection section
         file_frame = ttk.LabelFrame(main_frame, text="File Selection", padding="10")
         file_frame.pack(fill=tk.X, pady=5)
@@ -333,23 +336,92 @@ class DataVisualizerApp:
         self.data_info_text = tk.Text(info_frame, wrap=tk.WORD, height=10)
         self.data_info_text.pack(fill=tk.BOTH, expand=True)
         
-        # Data preview tab
+        # Data preview tab - using Treeview instead of Text
         preview_frame = ttk.Frame(notebook, padding="10")
         notebook.add(preview_frame, text="Data Preview")
-        self.data_preview_text = tk.Text(preview_frame, wrap=tk.WORD, height=10)
-        self.data_preview_text.pack(fill=tk.BOTH, expand=True)
         
-        # Correlations tab
+        # Create frame with scrollbars for preview table
+        preview_table_frame = ttk.Frame(preview_frame)
+        preview_table_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Add scrollbars
+        preview_y_scroll = ttk.Scrollbar(preview_table_frame, orient=tk.VERTICAL)
+        preview_x_scroll = ttk.Scrollbar(preview_table_frame, orient=tk.HORIZONTAL)
+        
+        # Create the Treeview
+        self.data_preview_table = ttk.Treeview(preview_table_frame, 
+                                              yscrollcommand=preview_y_scroll.set,
+                                              xscrollcommand=preview_x_scroll.set)
+        
+        # Configure scrollbars
+        preview_y_scroll.config(command=self.data_preview_table.yview)
+        preview_x_scroll.config(command=self.data_preview_table.xview)
+        
+        # Place widgets
+        preview_y_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        preview_x_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+        self.data_preview_table.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Keep the text widget for backward compatibility but hide it
+        self.data_preview_text = tk.Text(preview_frame, wrap=tk.WORD, height=10)
+        
+        # Correlations tab - using Treeview instead of Text
         corr_frame = ttk.Frame(notebook, padding="10")
         notebook.add(corr_frame, text="Correlations")
-        self.correlations_text = tk.Text(corr_frame, wrap=tk.WORD, height=10)
-        self.correlations_text.pack(fill=tk.BOTH, expand=True)
         
-        # Metrics tab
+        # Create frame with scrollbars for correlations table
+        corr_table_frame = ttk.Frame(corr_frame)
+        corr_table_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Add scrollbars
+        corr_y_scroll = ttk.Scrollbar(corr_table_frame, orient=tk.VERTICAL)
+        corr_x_scroll = ttk.Scrollbar(corr_table_frame, orient=tk.HORIZONTAL)
+        
+        # Create the Treeview
+        self.correlations_table = ttk.Treeview(corr_table_frame, 
+                                               yscrollcommand=corr_y_scroll.set,
+                                               xscrollcommand=corr_x_scroll.set)
+        
+        # Configure scrollbars
+        corr_y_scroll.config(command=self.correlations_table.yview)
+        corr_x_scroll.config(command=self.correlations_table.xview)
+        
+        # Place widgets
+        corr_y_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        corr_x_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+        self.correlations_table.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Keep the text widget for backward compatibility but hide it
+        self.correlations_text = tk.Text(corr_frame, wrap=tk.WORD, height=10)
+        
+        # Metrics tab - using Treeview instead of Text
         metrics_frame = ttk.Frame(notebook, padding="10")
         notebook.add(metrics_frame, text="Metrics")
+        
+        # Create frame with scrollbars for metrics table
+        metrics_table_frame = ttk.Frame(metrics_frame)
+        metrics_table_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Add scrollbars
+        metrics_y_scroll = ttk.Scrollbar(metrics_table_frame, orient=tk.VERTICAL)
+        metrics_x_scroll = ttk.Scrollbar(metrics_table_frame, orient=tk.HORIZONTAL)
+        
+        # Create the Treeview
+        self.metrics_table = ttk.Treeview(metrics_table_frame, 
+                                         yscrollcommand=metrics_y_scroll.set,
+                                         xscrollcommand=metrics_x_scroll.set)
+        
+        # Configure scrollbars
+        metrics_y_scroll.config(command=self.metrics_table.yview)
+        metrics_x_scroll.config(command=self.metrics_table.xview)
+        
+        # Place widgets
+        metrics_y_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        metrics_x_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+        self.metrics_table.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Keep the text widget for backward compatibility but hide it
         self.metrics_text = tk.Text(metrics_frame, wrap=tk.WORD, height=10)
-        self.metrics_text.pack(fill=tk.BOTH, expand=True)
         
         # Visualization tab
         viz_frame = ttk.Frame(notebook, padding="10")
@@ -584,7 +656,7 @@ class DataVisualizerApp:
                 
             # Refresh the canvas
             self.canvas.draw()
-            
+        
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate plot: {str(e)}")
     
@@ -974,23 +1046,238 @@ class DataVisualizerApp:
                 self.data_info_text.insert(tk.END, "\nMissing Values:\n")
                 for col, count in info['missing_values'].items():
                     self.data_info_text.insert(tk.END, f"{col}: {count}\n")
-                
+                    
                 if 'memory_usage' in info:
                     self.data_info_text.insert(tk.END, f"\nMemory Usage: {info['memory_usage']:.2f} MB\n")
+            else:
+                self.data_info_text.delete(1.0, tk.END)
+                self.data_info_text.insert(tk.END, "No data loaded.")
         else:
             self.data_info_text.delete(1.0, tk.END)
             self.data_info_text.insert(tk.END, "No data loaded.")
-    
+                
     def show_data_preview(self):
-        """Display data preview"""
+        """Display data preview in a table"""
         if self.model.df is not None:
             preview = self.model.get_data_preview()
             if preview is not None:
+                # Also update text widget for backward compatibility
                 self.data_preview_text.delete(1.0, tk.END)
                 self.data_preview_text.insert(tk.END, preview.to_string())
+                
+                # Clear existing items
+                for item in self.data_preview_table.get_children():
+                    self.data_preview_table.delete(item)
+                
+                # Configure columns
+                columns = list(preview.columns)
+                self.data_preview_table["columns"] = columns
+                
+                # Format column headings
+                self.data_preview_table.heading("#0", text="Index")
+                self.data_preview_table.column("#0", width=80, stretch=tk.NO)
+                
+                for col in columns:
+                    self.data_preview_table.heading(col, text=col)
+                    # Default width based on column name length
+                    col_width = max(100, len(str(col)) * 10)
+                    self.data_preview_table.column(col, width=col_width, stretch=tk.YES)
+                
+                # Add data rows
+                for idx, row in preview.iterrows():
+                    values = [str(row[col]) for col in columns]
+                    self.data_preview_table.insert("", tk.END, text=str(idx), values=values)
+                
+                # Apply table formatting
+                self._apply_table_formatting(self.data_preview_table)
+            else:
+                # Clear table
+                for item in self.data_preview_table.get_children():
+                    self.data_preview_table.delete(item)
+                # Update text widget
+                self.data_preview_text.delete(1.0, tk.END)
+                self.data_preview_text.insert(tk.END, "No data loaded.")
         else:
+            # Clear table
+            for item in self.data_preview_table.get_children():
+                self.data_preview_table.delete(item)
+            # Update text widget
             self.data_preview_text.delete(1.0, tk.END)
             self.data_preview_text.insert(tk.END, "No data loaded.")
+
+    def show_correlations(self):
+        """Display correlation matrix in a table"""
+        if self.model.df is not None:
+            corr_matrix = self.model.get_correlations()
+            if corr_matrix is not None and not corr_matrix.empty:
+                # Also update text widget for backward compatibility
+                self.correlations_text.delete(1.0, tk.END)
+                self.correlations_text.insert(tk.END, corr_matrix.to_string())
+                
+                # Clear existing items
+                for item in self.correlations_table.get_children():
+                    self.correlations_table.delete(item)
+                
+                # Configure columns
+                columns = list(corr_matrix.columns)
+                self.correlations_table["columns"] = columns
+                
+                # Format column headings
+                self.correlations_table.heading("#0", text="Features")
+                self.correlations_table.column("#0", width=120, stretch=tk.NO)
+                
+                for col in columns:
+                    self.correlations_table.heading(col, text=col)
+                    # Default width
+                    self.correlations_table.column(col, width=100, stretch=tk.YES)
+                
+                # Add data rows
+                for idx, row in corr_matrix.iterrows():
+                    # Create a list for the values and a list for the tags
+                    values = []
+                    tags = ['row']  # Default tag
+                    
+                    for col in columns:
+                        if isinstance(row[col], float):
+                            # Format values to 2 decimal places for better readability
+                            values.append(f"{row[col]:.2f}")
+                            
+                            # Add color-coding for high correlations
+                            if col != idx:  # Skip the diagonal (correlation with self)
+                                if row[col] > 0.7:
+                                    tags.append(f'high_pos_{col}')
+                                elif row[col] < -0.7:
+                                    tags.append(f'high_neg_{col}')
+                        else:
+                            values.append(str(row[col]))
+                    
+                    # Insert the row with appropriate tags
+                    item_id = self.correlations_table.insert("", tk.END, text=str(idx), values=values, tags=tags)
+                    
+                    # Apply cell-specific formatting
+                    for i, col in enumerate(columns):
+                        if col != idx and isinstance(row[col], float):
+                            if row[col] > 0.7:
+                                self.correlations_table.tag_configure(f'high_pos_{col}', background='#c6efce')
+                            elif row[col] < -0.7:
+                                self.correlations_table.tag_configure(f'high_neg_{col}', background='#ffc7ce')
+                
+                # Apply table formatting
+                self._apply_table_formatting(self.correlations_table)
+                
+                # Display as heatmap plot
+                self.display_correlations(corr_matrix)
+            else:
+                # Clear table
+                for item in self.correlations_table.get_children():
+                    self.correlations_table.delete(item)
+                # Update text widget
+                self.correlations_text.delete(1.0, tk.END)
+                self.correlations_text.insert(tk.END, "No correlation data available.")
+        else:
+            # Clear table
+            for item in self.correlations_table.get_children():
+                self.correlations_table.delete(item)
+            # Update text widget  
+            self.correlations_text.delete(1.0, tk.END)
+            self.correlations_text.insert(tk.END, "No data loaded.")
+
+    def show_metrics(self):
+        """Display statistical metrics in a table"""
+        if self.model.df is not None:
+            metrics = self.model.get_metrics()
+            if metrics is not None and not metrics.empty:
+                # Also update text widget for backward compatibility
+                self.metrics_text.delete(1.0, tk.END)
+                self.metrics_text.insert(tk.END, metrics.to_string())
+                
+                # Clear existing items
+                for item in self.metrics_table.get_children():
+                    self.metrics_table.delete(item)
+                
+                # Configure columns
+                columns = list(metrics.columns)
+                self.metrics_table["columns"] = columns
+                
+                # Format column headings
+                self.metrics_table.heading("#0", text="Statistic")
+                self.metrics_table.column("#0", width=120, stretch=tk.NO)
+                
+                for col in columns:
+                    self.metrics_table.heading(col, text=col)
+                    # Default width
+                    self.metrics_table.column(col, width=100, stretch=tk.YES)
+                
+                # Add data rows
+                for idx, row in metrics.iterrows():
+                    # Format numeric values for better readability
+                    values = []
+                    for col in columns:
+                        if isinstance(row[col], float):
+                            # Use scientific notation for very small numbers
+                            if abs(row[col]) < 0.001 and row[col] != 0:
+                                values.append(f"{row[col]:.2e}")
+                            else:
+                                values.append(f"{row[col]:.4f}")
+                        else:
+                            values.append(str(row[col]))
+                    self.metrics_table.insert("", tk.END, text=str(idx), values=values)
+                
+                # Apply table formatting
+                self._apply_table_formatting(self.metrics_table)
+            else:
+                # Clear table
+                for item in self.metrics_table.get_children():
+                    self.metrics_table.delete(item)
+                # Update text widget
+                self.metrics_text.delete(1.0, tk.END)
+                self.metrics_text.insert(tk.END, "No statistical metrics available.")
+        else:
+            # Clear table
+            for item in self.metrics_table.get_children():
+                self.metrics_table.delete(item)
+            # Update text widget
+            self.metrics_text.delete(1.0, tk.END)
+            self.metrics_text.insert(tk.END, "No data loaded.")
+
+    def _setup_treeview_styles(self):
+        """Configure custom styles for Treeview widgets"""
+        style = ttk.Style()
+        
+        # Configure the Treeview style
+        style.configure("Treeview", 
+                        background="#f0f0f0",
+                        foreground="black", 
+                        rowheight=25, 
+                        fieldbackground="#f0f0f0")
+        
+        # Configure Treeview heading style
+        style.configure("Treeview.Heading", 
+                        font=('Calibri', 10, 'bold'),
+                        background="#e0e0e0",
+                        foreground="black")
+        
+        # Map alternating row colors
+        style.map('Treeview', 
+                 background=[('selected', '#4a6984')],
+                 foreground=[('selected', 'white')])
+
+    def _apply_table_formatting(self, table):
+        """Apply alternating row colors and other formatting to a table"""
+        # Apply alternating row colors
+        for i, item in enumerate(table.get_children()):
+            if i % 2 == 0:
+                table.item(item, tags=('evenrow',))
+            else:
+                table.item(item, tags=('oddrow',))
+        
+        # Configure row tags
+        table.tag_configure('evenrow', background='#f0f0f0')
+        table.tag_configure('oddrow', background='#e0e0e0')
+        
+        # Configure special value tags (for correlation values)
+        table.tag_configure('high_pos', background='#c6efce', foreground='#006100')  # green
+        table.tag_configure('high_neg', background='#ffc7ce', foreground='#9c0006')  # red
 
 class DataController:
     def __init__(self, view, model):
